@@ -32,7 +32,7 @@ impl MdnsClientStream {
         packet_ttl: Option<u32>,
         ipv4_if: Option<Ipv4Addr>,
     ) -> (MdnsClientConnect, BufDnsStreamHandle) {
-        Self::new(*MDNS_IPV4, mdns_query_type, packet_ttl, ipv4_if, None)
+        Self::new(MDNS_IPV4, mdns_query_type, packet_ttl, ipv4_if, None)
     }
 
     /// associates the socket to the well-known ipv6 multicast address
@@ -41,7 +41,7 @@ impl MdnsClientStream {
         packet_ttl: Option<u32>,
         ipv6_if: Option<u32>,
     ) -> (MdnsClientConnect, BufDnsStreamHandle) {
-        Self::new(*MDNS_IPV6, mdns_query_type, packet_ttl, None, ipv6_if)
+        Self::new(MDNS_IPV6, mdns_query_type, packet_ttl, None, ipv6_if)
     }
 
     /// it is expected that the resolver wrapper will be responsible for creating and managing

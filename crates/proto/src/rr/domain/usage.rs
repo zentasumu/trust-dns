@@ -11,22 +11,27 @@
 
 use std::ops::Deref;
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 
 use crate::rr::domain::Name;
 
-lazy_static! {
-    /// Default Name usage, everything is normal...
-    pub static ref DEFAULT: ZoneUsage = ZoneUsage::default();
-}
+static DEFAULT: Lazy<ZoneUsage> = Lazy::new(ZoneUsage::default);
 
-lazy_static! {
-    static ref ARPA: Name = Name::from_ascii("arpa.").unwrap();
-    /// zone for ipv4 reverse addresses
-    pub static ref IN_ADDR_ARPA: Name = Name::from_ascii("in-addr").unwrap().append_domain(&*ARPA).unwrap();
-    /// zone for ipv6 reverse addresses
-    pub static ref IP6_ARPA: Name = Name::from_ascii("ip6").unwrap().append_domain(&*ARPA).unwrap();
-}
+static ARPA: Lazy<Name> = Lazy::new(|| Name::from_ascii("arpa.").unwrap());
+
+pub static IN_ADDR_ARPA: Lazy<Name> = Lazy::new(|| {
+    Name::from_ascii("in-addr")
+        .unwrap()
+        .append_domain(&*ARPA)
+        .unwrap()
+});
+
+pub static IP6_ARPA: Lazy<Name> = Lazy::new(|| {
+    Name::from_ascii("ip6")
+        .unwrap()
+        .append_domain(&*ARPA)
+        .unwrap()
+});
 
 lazy_static! {
     /// localhost.
@@ -419,7 +424,7 @@ pub struct ZoneUsage {
 impl ZoneUsage {
     /// Constructs a new ZoneUsage with the associated values
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
+    pub const fn new(
         name: Name,
         user: UserUsage,
         app: AppUsage,

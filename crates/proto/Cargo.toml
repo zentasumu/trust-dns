@@ -84,8 +84,8 @@ http = { version = "0.2", optional = true }
 idna = "0.2.3"
 ipnet = "2.3.0"
 js-sys = { version = "0.3.44", optional = true }
-lazy_static = "1.2.0"
 native-tls = { version = "0.2", optional = true }
+once_cell = "1.12"
 openssl = { version = "0.10", features = ["v102", "v110"], optional = true }
 quinn = { version = "0.8.2", optional = true }
 rand = "0.8"

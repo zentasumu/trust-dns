@@ -14,7 +14,6 @@ use std::task::{Context, Poll};
 
 use futures_util::stream::{Stream, StreamExt};
 use futures_util::{future, future::Future, ready, FutureExt, TryFutureExt};
-use lazy_static::lazy_static;
 use rand;
 use rand::distributions::{uniform::Uniform, Distribution};
 use socket2::{self, Socket};
@@ -27,12 +26,13 @@ use crate::xfer::SerialMessage;
 use crate::BufDnsStreamHandle;
 
 pub(crate) const MDNS_PORT: u16 = 5353;
-lazy_static! {
-    /// mDNS ipv4 address https://www.iana.org/assignments/multicast-addresses/multicast-addresses.xhtml
-    pub static ref MDNS_IPV4: SocketAddr = SocketAddr::new(Ipv4Addr::new(224,0,0,251).into(), MDNS_PORT);
-    /// link-local mDNS ipv6 address https://www.iana.org/assignments/ipv6-multicast-addresses/ipv6-multicast-addresses.xhtml
-    pub static ref MDNS_IPV6: SocketAddr = SocketAddr::new(Ipv6Addr::new(0xFF02, 0, 0, 0, 0, 0, 0, 0x00FB).into(), MDNS_PORT);
-}
+/// mDNS ipv4 address https://www.iana.org/assignments/multicast-addresses/multicast-addresses.xhtml
+pub const MDNS_IPV4: SocketAddr = SocketAddr::new(Ipv4Addr::new(224, 0, 0, 251).into(), MDNS_PORT);
+/// link-local mDNS ipv6 address https://www.iana.org/assignments/ipv6-multicast-addresses/ipv6-multicast-addresses.xhtml
+pub const MDNS_IPV6: SocketAddr = SocketAddr::new(
+    Ipv6Addr::new(0xFF02, 0, 0, 0, 0, 0, 0, 0x00FB).into(),
+    MDNS_PORT,
+);
 
 /// A UDP stream of DNS binary packets
 #[must_use = "futures do nothing unless polled"]
@@ -58,7 +58,7 @@ impl MdnsStream {
         Box<dyn Future<Output = Result<Self, io::Error>> + Send + Unpin>,
         BufDnsStreamHandle,
     ) {
-        Self::new(*MDNS_IPV4, mdns_query_type, packet_ttl, ipv4_if, None)
+        Self::new(MDNS_IPV4, mdns_query_type, packet_ttl, ipv4_if, None)
     }
 
     /// associates the socket to the well-known ipv6 multicast address
@@ -70,7 +70,7 @@ impl MdnsStream {
         Box<dyn Future<Output = Result<Self, io::Error>> + Send + Unpin>,
         BufDnsStreamHandle,
     ) {
-        Self::new(*MDNS_IPV6, mdns_query_type, packet_ttl, None, ipv6_if)
+        Self::new(MDNS_IPV6, mdns_query_type, packet_ttl, None, ipv6_if)
     }
 
     /// Returns the address of the multicast network in use
@@ -429,13 +429,10 @@ pub(crate) mod tests {
 
     // TODO: is there a better way?
     const BASE_TEST_PORT: u16 = 5379;
-
-    lazy_static! {
-        /// 250 appears to be unused/unregistered
-        static ref TEST_MDNS_IPV4: IpAddr = Ipv4Addr::new(224,0,0,250).into();
-        /// FA appears to be unused/unregistered
-        static ref TEST_MDNS_IPV6: IpAddr = Ipv6Addr::new(0xFF02, 0, 0, 0, 0, 0, 0, 0x00FA).into();
-    }
+    /// 250 appears to be unused/unregistered
+    const TEST_MDNS_IPV4: IpAddr = Ipv4Addr::new(224, 0, 0, 250).into();
+    /// FA appears to be unused/unregistered
+    const TEST_MDNS_IPV6: IpAddr = Ipv6Addr::new(0xFF02, 0, 0, 0, 0, 0, 0, 0x00FA).into();
 
     // one_shot tests are basically clones from the udp tests
     #[test]
@@ -445,7 +442,7 @@ pub(crate) mod tests {
 
         let io_loop = runtime::Runtime::new().unwrap();
         let (stream, _) = MdnsStream::new(
-            SocketAddr::new(*TEST_MDNS_IPV4, BASE_TEST_PORT),
+            SocketAddr::new(TEST_MDNS_IPV4, BASE_TEST_PORT),
             MdnsQueryType::OneShot,
             Some(1),
             None,
@@ -463,13 +460,13 @@ pub(crate) mod tests {
     #[ignore]
     #[test]
     fn test_one_shot_mdns_ipv4() {
-        one_shot_mdns_test(SocketAddr::new(*TEST_MDNS_IPV4, BASE_TEST_PORT + 1));
+        one_shot_mdns_test(SocketAddr::new(TEST_MDNS_IPV4, BASE_TEST_PORT + 1));
     }
 
     #[test]
     #[ignore]
     fn test_one_shot_mdns_ipv6() {
-        one_shot_mdns_test(SocketAddr::new(*TEST_MDNS_IPV6, BASE_TEST_PORT + 2));
+        one_shot_mdns_test(SocketAddr::new(TEST_MDNS_IPV6, BASE_TEST_PORT + 2));
     }
 
     //   as there are probably unexpected responses coming on the standard addresses
@@ -608,7 +605,7 @@ pub(crate) mod tests {
     fn test_passive_mdns() {
         passive_mdns_test(
             MdnsQueryType::Passive,
-            SocketAddr::new(*TEST_MDNS_IPV4, BASE_TEST_PORT + 3),
+            SocketAddr::new(TEST_MDNS_IPV4, BASE_TEST_PORT + 3),
         )
     }
 
@@ -618,7 +615,7 @@ pub(crate) mod tests {
     fn test_oneshot_join_mdns() {
         passive_mdns_test(
             MdnsQueryType::OneShotJoin,
-            SocketAddr::new(*TEST_MDNS_IPV4, BASE_TEST_PORT + 4),
+            SocketAddr::new(TEST_MDNS_IPV4, BASE_TEST_PORT + 4),
         )
     }
 
