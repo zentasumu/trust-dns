@@ -1292,39 +1292,27 @@ impl FromStr for Name {
     }
 }
 
-/// Conversion into a Name
-pub trait IntoName: Sized {
-    /// Convert this into Name
-    fn into_name(self) -> ProtoResult<Name>;
-}
+impl TryFrom<&str> for Name {
+    type Error = ProtoError;
 
-impl<'a> IntoName for &'a str {
-    /// Performs a utf8, IDNA or punycode, translation of the `str` into `Name`
-    fn into_name(self) -> ProtoResult<Name> {
-        Name::from_utf8(self)
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Name::from_utf8(value)
     }
 }
 
-impl IntoName for String {
-    /// Performs a utf8, IDNA or punycode, translation of the `String` into `Name`
-    fn into_name(self) -> ProtoResult<Name> {
-        Name::from_utf8(self)
+impl TryFrom<&String> for Name {
+    type Error = ProtoError;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Name::from_utf8(value)
     }
 }
 
-impl IntoName for &String {
-    /// Performs a utf8, IDNA or punycode, translation of the `&String` into `Name`
-    fn into_name(self) -> ProtoResult<Name> {
-        Name::from_utf8(self)
-    }
-}
+impl TryFrom<String> for Name {
+    type Error = ProtoError;
 
-impl<T> IntoName for T
-where
-    T: Into<Name>,
-{
-    fn into_name(self) -> ProtoResult<Name> {
-        Ok(self.into())
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Name::from_utf8(value)
     }
 }
 
@@ -1734,18 +1722,15 @@ mod tests {
         assert_eq!(Name::from_utf8("www.example.com").unwrap(), name);
         assert_eq!(
             Name::from_utf8("www.example.com").unwrap(),
-            Name::from_utf8("www.example.com")
-                .unwrap()
-                .into_name()
-                .unwrap()
+            Name::try_from(Name::from_utf8("www.example.com").unwrap()).unwrap(),
         );
         assert_eq!(
             Name::from_utf8("www.example.com").unwrap(),
-            "www.example.com".into_name().unwrap()
+            Name::try_from("www.example.com").unwrap(),
         );
         assert_eq!(
             Name::from_utf8("www.example.com").unwrap(),
-            "www.example.com".to_string().into_name().unwrap()
+            Name::try_from("www.example.com".to_string()).unwrap(),
         );
     }
 

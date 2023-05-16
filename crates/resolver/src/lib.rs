@@ -277,7 +277,7 @@ pub mod system_conf;
 mod tls;
 
 // reexports from proto
-pub use self::proto::rr::{IntoName, Name, TryParseIp};
+pub use self::proto::rr::{Name, TryParseIp};
 
 #[cfg(feature = "testing")]
 #[cfg_attr(docsrs, doc(cfg(feature = "testing")))]

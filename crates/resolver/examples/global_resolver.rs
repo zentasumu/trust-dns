@@ -8,8 +8,9 @@ use {
     std::io,
     std::net::SocketAddr,
     std::task::Poll,
+    trust_dns_proto::{error::ProtoError, rr::domain::Name},
+    trust_dns_resolver::TryParseIp,
     trust_dns_resolver::{name_server::TokioRuntimeProvider, TokioAsyncResolver},
-    trust_dns_resolver::{IntoName, TryParseIp},
 };
 
 // This is an example of registering a static global resolver into any system.
@@ -96,7 +97,7 @@ lazy_static! {
     docsrs,
     doc(cfg(all(feature = "tokio-runtime", feature = "system-config")))
 )]
-pub async fn resolve<N: IntoName + Display + TryParseIp + 'static>(
+pub async fn resolve<N: TryInto<Name, Error = ProtoError> + Display + TryParseIp + 'static>(
     host: N,
     port: u16,
 ) -> io::Result<Vec<SocketAddr>> {

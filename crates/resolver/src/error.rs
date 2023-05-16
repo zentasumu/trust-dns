@@ -7,7 +7,7 @@
 
 //! Error types for the crate
 
-use std::{cmp::Ordering, fmt, io, sync};
+use std::{cmp::Ordering, convert::Infallible, fmt, io, sync};
 
 use thiserror::Error;
 use tracing::debug;
@@ -356,5 +356,13 @@ impl From<ResolveError> for io::Error {
 impl<T> From<sync::PoisonError<T>> for ResolveError {
     fn from(e: sync::PoisonError<T>) -> Self {
         ResolveErrorKind::Msg(format!("lock was poisoned, this is non-recoverable: {e}")).into()
+    }
+}
+
+// Blanket implementations of `TryFrom` for `From` implementations use `Infallible` as the error
+// type. Since these can't actually occur, this seems like a reasonable thing to do.
+impl From<Infallible> for ResolveError {
+    fn from(_: Infallible) -> Self {
+        unreachable!()
     }
 }

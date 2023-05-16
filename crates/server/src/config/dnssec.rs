@@ -7,6 +7,8 @@
 
 //! Configuration types for all security options in trust-dns
 
+#[cfg(feature = "dnssec")]
+use std::fmt;
 use std::path::Path;
 
 #[cfg(all(feature = "dns-over-openssl", not(feature = "dns-over-rustls")))]
@@ -15,12 +17,9 @@ use openssl::{pkey::PKey, stack::Stack, x509::X509};
 use rustls::{Certificate, PrivateKey};
 use serde::Deserialize;
 
-use crate::proto::rr::domain::Name;
 #[cfg(feature = "dnssec")]
-use crate::proto::rr::{
-    dnssec::{Algorithm, KeyFormat, KeyPair, Private, SigSigner},
-    domain::IntoName,
-};
+use crate::proto::rr::dnssec::{Algorithm, KeyFormat, KeyPair, Private, SigSigner};
+use crate::proto::rr::domain::Name;
 use crate::proto::serialize::txt::ParseResult;
 
 /// Key pair configuration for DNSSEC keys for signing a zone
@@ -152,9 +151,12 @@ impl KeyConfig {
     /// Tries to read the defined key into a Signer
     #[cfg(feature = "dnssec")]
     #[cfg_attr(docsrs, doc(cfg(feature = "dnssec")))]
-    pub fn try_into_signer<N: IntoName>(&self, signer_name: N) -> Result<SigSigner, String> {
+    pub fn try_into_signer<N: TryInto<Name>>(&self, signer_name: N) -> Result<SigSigner, String>
+    where
+        N::Error: fmt::Display,
+    {
         let signer_name = signer_name
-            .into_name()
+            .try_into()
             .map_err(|e| format!("error loading signer name: {e}"))?;
 
         let key = load_key(signer_name, self)

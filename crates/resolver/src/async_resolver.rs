@@ -10,11 +10,11 @@ use std::fmt;
 use std::net::IpAddr;
 use std::sync::Arc;
 
-use proto::error::ProtoResult;
+use proto::error::{ProtoError, ProtoResult};
 use proto::op::Query;
 use proto::rr::domain::usage::ONION;
 use proto::rr::domain::TryParseIp;
-use proto::rr::{IntoName, Name, Record, RecordType};
+use proto::rr::{Name, Record, RecordType};
 use proto::xfer::{DnsRequestOptions, RetryDnsHandle};
 use tracing::{debug, trace};
 
@@ -78,8 +78,11 @@ macro_rules! lookup_fn {
         /// # Arguments
         ///
         /// * `query` - a string which parses to a domain name, failure to parse will return an error
-        pub async fn $p<N: IntoName>(&self, query: N) -> Result<$l, ResolveError> {
-            let name = match query.into_name() {
+        pub async fn $p<N: TryInto<Name>>(&self, query: N) -> Result<$l, ResolveError>
+        where
+            N::Error: Into<ResolveError>,
+        {
+            let name = match query.try_into() {
                 Ok(name) => name,
                 Err(err) => {
                     return Err(err.into());
@@ -273,12 +276,15 @@ impl<P: RuntimeProvider> AsyncResolver<P> {
     /// # Returns
     ///
     //  A future for the returned Lookup RData
-    pub async fn lookup<N: IntoName>(
+    pub async fn lookup<N: TryInto<Name>>(
         &self,
         name: N,
         record_type: RecordType,
-    ) -> Result<Lookup, ResolveError> {
-        let name = match name.into_name() {
+    ) -> Result<Lookup, ResolveError>
+    where
+        N::Error: Into<ResolveError>,
+    {
+        let name = match name.try_into() {
             Ok(name) => name,
             Err(err) => return Err(err.into()),
         };
@@ -377,13 +383,13 @@ impl<P: RuntimeProvider> AsyncResolver<P> {
     ///
     /// # Arguments
     /// * `host` - string hostname, if this is an invalid hostname, an error will be returned.
-    pub async fn lookup_ip<N: IntoName + TryParseIp>(
+    pub async fn lookup_ip<N: TryInto<Name, Error = ProtoError> + TryParseIp>(
         &self,
         host: N,
     ) -> Result<LookupIp, ResolveError> {
         let mut finally_ip_addr: Option<Record> = None;
         let maybe_ip = host.try_parse_ip();
-        let maybe_name: ProtoResult<Name> = host.into_name();
+        let maybe_name: ProtoResult<Name> = host.try_into();
 
         // if host is a ip address, return directly.
         if let Some(ip_addr) = maybe_ip {

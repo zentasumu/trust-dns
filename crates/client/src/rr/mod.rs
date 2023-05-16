@@ -20,7 +20,7 @@ pub use self::dns_class::DNSClass;
 pub use self::record_data::RData;
 pub use self::record_type::RecordType;
 pub use self::resource::Record;
-pub use self::rr::domain::{IntoName, Label, Name};
+pub use self::rr::domain::{Label, Name};
 #[allow(deprecated)]
 pub use self::rr::IntoRecordSet;
 pub use self::rr::RecordData;
