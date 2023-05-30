@@ -10,7 +10,6 @@ members = [
     "util",
     "tests/compatibility-tests",
     "tests/integration-tests",
-    "fuzz",
 ]
 
 exclude = ["fuzz"]
@@ -88,7 +87,6 @@ ipconfig = "0.3.0"
 ipnet = "2.3.0"
 js-sys = "0.3.44"
 lazy_static = "1.2.0"
-libfuzzer-sys = "0.4"
 lru-cache = "0.1.2"
 pin-utils = "0.1.0"
 radix_trie = "0.2.0"
